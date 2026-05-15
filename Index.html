@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Animated Weather App</title>
+
+  <style>
+    *{
+      margin:0;
+      padding:0;
+      box-sizing:border-box;
+      font-family: Arial, sans-serif;
+    }
+
+    body{
+      height:100vh;
+      overflow:hidden;
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      background: linear-gradient(to top, #87ceeb, #dff6ff);
+      position:relative;
+    }
+
+    /* SKY */
+    .sky{
+      position:absolute;
+      width:100%;
+      height:100%;
+      overflow:hidden;
+    }
+
+    /* SUN */
+    .sun{
+      position:absolute;
+      width:120px;
+      height:120px;
+      background:#ffd93d;
+      border-radius:50%;
+      top:60px;
+      right:120px;
+      box-shadow:0 0 50px #ffd93d;
+      animation: pulse 3s infinite alternate;
+    }
+
+    @keyframes pulse{
+      from{
+        transform:scale(1);
+      }
+      to{
+        transform:scale(1.08);
+      }
+    }
+
+    /* CLOUDS */
+    .cloud{
+      position:absolute;
+      background:white;
+      border-radius:50px;
+      opacity:0.9;
+    }
+
+    .cloud::before,
+    .cloud::after{
+      content:"";
+      position:absolute;
+      background:white;
+      border-radius:50%;
+    }
+
+    .cloud1{
+      width:120px;
+      height:50px;
+      top:100px;
+      left:-150px;
+      animation: moveCloud 35s linear infinite;
+    }
+
+    .cloud1::before{
+      width:60px;
+      height:60px;
+      top:-30px;
+      left:15px;
+    }
+
+    .cloud1::after{
+      width:70px;
+      height:70px;
+      top:-35px;
+      right:15px;
+    }
+
+    .cloud2{
+      width:180px;
+      height:60px;
+      top:200px;
+      left:-250px;
+      animation: moveCloud 50s linear infinite;
+    }
+
+    .cloud2::before{
+      width:80px;
+      height:80px;
+      top:-40px;
+      left:25px;
+    }
+
+    .cloud2::after{
+      width:90px;
+      height:90px;
+      top:-45px;
+      right:25px;
+    }
+
+    @keyframes moveCloud{
+      from{
+        transform:translateX(0);
+      }
+      to{
+        transform:translateX(140vw);
+      }
+    }
+
+    /* MOUNTAINS */
+    .mountains{
+      position:absolute;
+      bottom:0;
+      width:100%;
+      height:300px;
+    }
+
+    .mountain{
+      position:absolute;
+      bottom:0;
+      width:0;
+      height:0;
+      border-left:250px solid transparent;
+      border-right:250px solid transparent;
+      border-bottom:350px solid #4b6584;
+    }
+
+    .mountain1{
+      left:-100px;
+    }
+
+    .mountain2{
+      left:300px;
+      border-bottom-color:#3c6382;
+    }
+
+    .mountain3{
+      right:-100px;
+      border-bottom-color:#4b7bec;
+    }
+
+    /* GRASS */
+    .grass{
+      position:absolute;
+      bottom:0;
+      width:100%;
+      height:120px;
+      background:#2ecc71;
+    }
+
+    /* WEATHER CARD */
+    .weather-container{
+      position:relative;
+      z-index:10;
+      width:360px;
+      padding:30px;
+      border-radius:20px;
+      background:rgba(255,255,255,0.2);
+      backdrop-filter: blur(12px);
+      box-shadow:0 10px 30px rgba(0,0,0,0.2);
+      text-align:center;
+      color:white;
+    }
+
+    .weather-container h1{
+      margin-bottom:20px;
+      font-size:32px;
+    }
+
+    .search-box{
+      display:flex;
+      gap:10px;
+      margin-bottom:20px;
+    }
+
+    .search-box input{
+      flex:1;
+      padding:12px;
+      border:none;
+      border-radius:10px;
+      outline:none;
+      font-size:16px;
+    }
+
+    .search-box button{
+      padding:12px 18px;
+      border:none;
+      border-radius:10px;
+      background:#0984e3;
+      color:white;
+      cursor:pointer;
+      font-size:16px;
+      transition:0.3s;
+    }
+
+    .search-box button:hover{
+      background:#0767b1;
+    }
+
+    .temperature{
+      font-size:60px;
+      font-weight:bold;
+      margin-top:10px;
+    }
+
+    .condition{
+      font-size:22px;
+      margin-top:10px;
+    }
+
+    .icon{
+      width:90px;
+      margin-top:10px;
+    }
+
+    .details{
+      margin-top:20px;
+      display:flex;
+      justify-content:space-around;
+      font-size:18px;
+    }
+
+    .error{
+      margin-top:15px;
+      color:#ffcccc;
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- Animated Background -->
+  <div class="sky">
+    <div class="sun"></div>
+
+    <div class="cloud cloud1"></div>
+    <div class="cloud cloud2"></div>
+
+    <div class="mountains">
+      <div class="mountain mountain1"></div>
+      <div class="mountain mountain2"></div>
+      <div class="mountain mountain3"></div>
+    </div>
+
+    <div class="grass"></div>
+  </div>
+
+  <!-- Weather Card -->
+  <div class="weather-container">
+    <h1>Weather App</h1>
+
+    <div class="search-box">
+      <input type="text" id="locationInput" placeholder="Enter city">
+      <button onclick="getWeather()">Search</button>
+    </div>
+
+    <div id="weatherInfo"></div>
+    <div class="error" id="error"></div>
+  </div>
+
+  <script>
+    async function getWeather() {
+
+      const location = document.getElementById("locationInput").value;
+      const weatherInfo = document.getElementById("weatherInfo");
+      const error = document.getElementById("error");
+
+      weatherInfo.innerHTML = "";
+      error.innerHTML = "";
+
+      if(location === ""){
+        error.innerHTML = "Please enter a city name";
+        return;
+      }
+
+      const apiKey = "487a85092695470eb53152832261505";
+
+      // INDIA PRIORITY
+      const url = `https://api.weatherapi.com/v1/current.json?key=${apiKey}&q=${location},India&aqi=yes`;
+
+      try{
+
+        const response = await fetch(url);
+
+        if(!response.ok){
+          throw new Error("City not found");
+        }
+
+        const data = await response.json();
+
+        weatherInfo.innerHTML = `
+          <h2>${data.location.name}, ${data.location.country}</h2>
+
+          <img class="icon" src="https:${data.current.condition.icon}" alt="icon">
+
+          <div class="temperature">
+            ${data.current.temp_c}°C
+          </div>
+
+          <div class="condition">
+            ${data.current.condition.text}
+          </div>
+
+          <div class="details">
+            <div>
+              💧 ${data.current.humidity}%<br>
+              Humidity
+            </div>
+
+            <div>
+              🌬 ${data.current.wind_kph} kph<br>
+              Wind
+            </div>
+          </div>
+        `;
+
+      } catch(err){
+        error.innerHTML = err.message;
+      }
+    }
+  </script>
+
+</body>
+</html>
